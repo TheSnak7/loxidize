@@ -1,9 +1,5 @@
-use bytecode::Bytecode;
-use opcodes::Op;
-
-mod bytecode;
-mod lox_value;
-mod opcodes;
+use loxidize::bytecode::Bytecode;
+use loxidize::opcodes::Op;
 
 fn main() {
     let mut bc = Bytecode::new();
