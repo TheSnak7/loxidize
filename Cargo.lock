@@ -25,7 +25,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "loxize"
+name = "loxidize"
 version = "0.1.0"
 dependencies = [
  "num_enum",
