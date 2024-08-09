@@ -6,7 +6,7 @@ const EXPECTED_COMMENT: &str = "// expect: ";
 
 #[rstest]
 fn lox_files(#[files("res/**/*.lox")] path: PathBuf) {
-    let string_path = path.to_str().expect("Expected non emtpy path");
+    let string_path = path.to_str().expect("Expected non empty path");
 
     let lox_source =
         std::fs::read_to_string(&path).expect(&format!("Expected to find a test {string_path}"));
