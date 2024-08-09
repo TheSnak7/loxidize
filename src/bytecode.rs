@@ -1,40 +1,49 @@
 use num_enum::TryFromPrimitive;
 
-use crate::{lox_value::LoxValue, opcodes::Op};
+use crate::{
+    lox_value::LoxValue,
+    opcodes::Op,
+    states::{Initialized, Uninitialized},
+};
 
-pub struct Ip {
+pub struct Ip<S> {
     ptr: *const u8,
+    state: S,
 }
 
-impl Ip {
-    pub unsafe fn new(code: &Vec<u8>) -> Self {
-        Self {
-            ptr: code.get(0).unwrap() as *const u8,
+impl<S> Ip<S> {
+    pub unsafe fn create(code: &Vec<u8>) -> Ip<Initialized> {
+        let ptr = code.get(0).unwrap() as *const u8;
+        Ip {
+            ptr: ptr,
+            state: Initialized,
         }
     }
 
+    pub fn create_uninitialized() -> Ip<Uninitialized> {
+        Ip {
+            ptr: std::ptr::null(),
+            state: Uninitialized,
+        }
+    }
+}
+
+impl Ip<Initialized> {
     #[inline(always)]
-    pub fn get_op(&self) -> Op {
+    pub fn get_op(&mut self) -> Op {
         let byte = unsafe { *self.ptr };
         let op = Op::try_from_primitive(byte).unwrap();
-        unsafe { self.ptr.add(1) };
         op
     }
 
     #[inline(always)]
-    pub fn get_u8(&self) -> u8 {
+    pub fn get_u8(&mut self) -> u8 {
         let byte = unsafe { *self.ptr };
-        unsafe { self.ptr.add(1) };
         byte
     }
-}
 
-// FIXME: Temporary and unsafe hack. Remove and introduce sth like typestate pattern
-impl Default for Ip {
-    fn default() -> Self {
-        Self {
-            ptr: std::ptr::null(),
-        }
+    pub fn inc(&mut self, offset: usize) {
+        unsafe { self.ptr = self.ptr.add(offset) };
     }
 }
 
@@ -59,8 +68,8 @@ impl Bytecode {
     With a secure memory location this pointer is safe, as the interpreter is single-threaded
     Furthermore the vector can be considered immutable, the pointer is required only for pointer arithmetic
     */
-    pub fn get_base_ip(&self) -> Ip {
-        unsafe { Ip::new(&self.code) }
+    pub fn get_base_ip(&self) -> Ip<Initialized> {
+        unsafe { Ip::<Initialized>::create(&self.code) }
     }
 
     pub fn get_code_len(&self) -> usize {

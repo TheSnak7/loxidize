@@ -2,6 +2,7 @@ use crate::{
     bytecode::{Bytecode, Ip},
     lox_value::LoxValue,
     opcodes::Op,
+    states::{Initialized, Uninitialized},
 };
 
 pub enum Error {
@@ -9,13 +10,13 @@ pub enum Error {
     Runtime,
 }
 
-pub struct VM {
-    ip: Ip,
+pub struct VM<S> {
+    ip: Ip<S>,
     // FIXME: Make more rusty
     bytecode: *const Bytecode,
 }
 
-impl VM {
+impl VM<Initialized> {
     // Change structure later
     fn interpret(&mut self, bytecode: &Bytecode) -> Result<(), Error> {
         self.ip = bytecode.get_base_ip();
@@ -36,11 +37,13 @@ impl VM {
         }
     }
 
-    fn read_u8(&self) -> u8 {
-        self.ip.get_u8()
+    fn read_u8(&mut self) -> u8 {
+        let byte = self.ip.get_u8();
+        self.ip.inc(1);
+        byte
     }
 
-    fn read_constant(&self) -> LoxValue {
+    fn read_constant(&mut self) -> LoxValue {
         let index = self.read_u8() as usize;
         unsafe { (*self.bytecode).get_constant(index).clone() }
     }
@@ -51,10 +54,10 @@ impl VM {
     }
 }
 
-impl Default for VM {
+impl Default for VM<Uninitialized> {
     fn default() -> Self {
         Self {
-            ip: Ip::default(),
+            ip: Ip::<Uninitialized>::create_uninitialized(),
             bytecode: std::ptr::null(),
         }
     }
