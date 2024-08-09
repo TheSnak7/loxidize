@@ -6,3 +6,7 @@ edition = "2021"
 [dependencies]
 num_enum = "0.7.3"
 rstest = "0.22.0"
+
+[features]
+default = ["vm-trace-execution"]
+vm-trace-execution = []

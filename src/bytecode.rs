@@ -2,6 +2,42 @@ use num_enum::TryFromPrimitive;
 
 use crate::{lox_value::LoxValue, opcodes::Op};
 
+pub struct Ip {
+    ptr: *const u8,
+}
+
+impl Ip {
+    pub unsafe fn new(code: &Vec<u8>) -> Self {
+        Self {
+            ptr: code.get(0).unwrap() as *const u8,
+        }
+    }
+
+    #[inline(always)]
+    pub fn get_op(&self) -> Op {
+        let byte = unsafe { *self.ptr };
+        let op = Op::try_from_primitive(byte).unwrap();
+        unsafe { self.ptr.add(1) };
+        op
+    }
+
+    #[inline(always)]
+    pub fn get_u8(&self) -> u8 {
+        let byte = unsafe { *self.ptr };
+        unsafe { self.ptr.add(1) };
+        byte
+    }
+}
+
+// FIXME: Temporary and unsafe hack. Remove and introduce sth like typestate pattern
+impl Default for Ip {
+    fn default() -> Self {
+        Self {
+            ptr: std::ptr::null(),
+        }
+    }
+}
+
 #[derive(Default)]
 pub struct Bytecode {
     code: Vec<u8>,
@@ -16,6 +52,33 @@ impl Bytecode {
             constants: vec![],
             lines: vec![],
         }
+    }
+
+    /*
+    When this is called compilation should have finished, therefore code should have stopped growing
+    With a secure memory location this pointer is safe, as the interpreter is single-threaded
+    Furthermore the vector can be considered immutable, the pointer is required only for pointer arithmetic
+    */
+    pub fn get_base_ip(&self) -> Ip {
+        unsafe { Ip::new(&self.code) }
+    }
+
+    pub fn get_code_len(&self) -> usize {
+        return self.code.len();
+    }
+
+    pub fn write_u8(&mut self, byte: u8, line: i32) {
+        self.code.push(byte);
+        self.lines.push(line);
+    }
+
+    pub fn add_constant(&mut self, value: LoxValue) -> usize {
+        self.constants.push(value);
+        self.constants.len() - 1
+    }
+
+    pub fn get_constant(&self, index: usize) -> LoxValue {
+        self.constants.get(index).unwrap().clone()
     }
 
     pub fn disassemble(&self, name: &str) -> String {
@@ -53,15 +116,5 @@ impl Bytecode {
         }
 
         disassembly
-    }
-
-    pub fn write_u8(&mut self, byte: u8, line: i32) {
-        self.code.push(byte);
-        self.lines.push(line);
-    }
-
-    pub fn add_constant(&mut self, value: LoxValue) -> usize {
-        self.constants.push(value);
-        self.constants.len() - 1
     }
 }
