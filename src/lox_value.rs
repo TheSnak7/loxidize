@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum LoxValue {
     Number(f64),
 }
@@ -14,6 +14,13 @@ impl From<f64> for LoxValue {
 impl From<i32> for LoxValue {
     fn from(value: i32) -> Self {
         Self::Number(f64::from(value))
+    }
+}
+
+impl Default for LoxValue {
+    fn default() -> Self {
+        // FIXME: replace with nil later
+        LoxValue::Number(0.0)
     }
 }
 

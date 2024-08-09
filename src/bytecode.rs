@@ -1,3 +1,5 @@
+use std::pin::Pin;
+
 use num_enum::TryFromPrimitive;
 
 use crate::{
@@ -12,8 +14,10 @@ pub struct Ip<S> {
 }
 
 impl<S> Ip<S> {
-    pub unsafe fn create(code: &Vec<u8>) -> Ip<Initialized> {
-        let ptr = code.get(0).unwrap() as *const u8;
+    pub unsafe fn create(code: Pin<&[u8]>) -> Ip<Initialized> {
+        let ptr = code.as_ptr();
+        assert!(ptr != std::ptr::null());
+
         Ip {
             ptr: ptr,
             state: Initialized,
@@ -30,18 +34,19 @@ impl<S> Ip<S> {
 
 impl Ip<Initialized> {
     #[inline(always)]
-    pub fn get_op(&mut self) -> Op {
+    pub fn get_op(&self) -> Op {
         let byte = unsafe { *self.ptr };
         let op = Op::try_from_primitive(byte).unwrap();
         op
     }
 
     #[inline(always)]
-    pub fn get_u8(&mut self) -> u8 {
+    pub fn get_u8(&self) -> u8 {
         let byte = unsafe { *self.ptr };
         byte
     }
 
+    #[inline(always)]
     pub fn inc(&mut self, offset: usize) {
         unsafe { self.ptr = self.ptr.add(offset) };
     }
@@ -69,7 +74,7 @@ impl Bytecode {
     Furthermore the vector can be considered immutable, the pointer is required only for pointer arithmetic
     */
     pub fn get_base_ip(&self) -> Ip<Initialized> {
-        unsafe { Ip::<Initialized>::create(&self.code) }
+        unsafe { Ip::<Initialized>::create(Pin::new(self.code.as_slice())) }
     }
 
     pub fn get_code_len(&self) -> usize {

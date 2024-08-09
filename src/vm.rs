@@ -2,6 +2,7 @@ use crate::{
     bytecode::{Bytecode, Ip},
     lox_value::LoxValue,
     opcodes::Op,
+    stack::{Sp, Stack},
     states::{Initialized, Uninitialized},
 };
 
@@ -10,10 +11,14 @@ pub enum Error {
     Runtime,
 }
 
+pub const STACK_SIZE: usize = 256;
+
 pub struct VM<S> {
     ip: Ip<S>,
+    sp: Sp<S, STACK_SIZE>,
     // FIXME: Make more rusty
     bytecode: *const Bytecode,
+    stack: Stack<STACK_SIZE>,
 }
 
 impl VM<Initialized> {
@@ -48,6 +53,11 @@ impl VM<Initialized> {
         unsafe { (*self.bytecode).get_constant(index).clone() }
     }
 
+    fn push(&mut self, value: &LoxValue) {
+        self.sp.write_value(value);
+        self.sp.inc(1);
+    }
+
     fn op_constant_small(&mut self) {
         let constant = self.read_constant();
         println!("{constant}")
@@ -58,7 +68,9 @@ impl Default for VM<Uninitialized> {
     fn default() -> Self {
         Self {
             ip: Ip::<Uninitialized>::create_uninitialized(),
+            sp: Sp::<Uninitialized, STACK_SIZE>::create_uninitialized(),
             bytecode: std::ptr::null(),
+            stack: Stack::new(),
         }
     }
 }
