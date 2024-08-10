@@ -8,6 +8,7 @@ use crate::{
     states::{Initialized, Uninitialized},
 };
 
+#[derive(Debug)]
 pub struct Ip<S> {
     ptr: *const u8,
     state: S,
@@ -52,7 +53,7 @@ impl Ip<Initialized> {
     }
 }
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct Bytecode {
     code: Vec<u8>,
     constants: Vec<LoxValue>,
@@ -116,9 +117,9 @@ impl Bytecode {
                     Op::ConstantSmall => {
                         let constant = self.code[op_index + 1];
                         let value = &self.constants[constant as usize];
-                        format!("{op: <16} {constant:04} {value}\n")
+                        format!("{op: <16} {constant:04} {value}")
                     }
-                    Op::Ret => format!("{op}"),
+                    Op::Ret | Op::Negate => format!("{op}"),
                 };
                 op_index += 1 + op.operand_count();
                 op_string
@@ -127,6 +128,7 @@ impl Bytecode {
                 "Illegal Instruction".to_owned()
             };
             disassembly.push_str(&op_text);
+            disassembly.push('\n');
         }
 
         disassembly
