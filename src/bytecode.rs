@@ -119,7 +119,9 @@ impl Bytecode {
                         let value = &self.constants[constant as usize];
                         format!("{op: <16} {constant:04} {value}")
                     }
-                    Op::Ret | Op::Negate => format!("{op}"),
+                    Op::Ret | Op::Negate | Op::Add | Op::Subtract | Op::Multiply | Op::Divide => {
+                        format!("{op}")
+                    }
                 };
                 op_index += 1 + op.operand_count();
                 op_string

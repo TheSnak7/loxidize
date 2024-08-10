@@ -48,13 +48,16 @@ impl VM<Initialized> {
             }
             match inst {
                 Op::ConstantSmall => self.op_constant_small(),
+                Op::Add => self.op_add(),
+                Op::Subtract => self.op_subtract(),
+                Op::Multiply => self.op_multiply(),
+                Op::Divide => self.op_divide(),
                 Op::Negate => self.op_negate(),
                 Op::Ret => {
                     let val = self.pop();
                     println!("{val}");
                     return Ok(());
                 }
-                _ => panic!("Unexpected inst"),
             }
         }
     }
@@ -84,6 +87,42 @@ impl VM<Initialized> {
     fn op_constant_small(&mut self) {
         let constant = self.read_constant();
         self.push(&constant);
+    }
+
+    fn op_add(&mut self) {
+        let b = self.pop();
+        let a = self.pop();
+        match (a, b) {
+            (LoxValue::Number(a), LoxValue::Number(b)) => self.push(&LoxValue::Number(a + b)),
+            _ => panic!("Operands must be numbers"),
+        }
+    }
+
+    fn op_subtract(&mut self) {
+        let b = self.pop();
+        let a = self.pop();
+        match (a, b) {
+            (LoxValue::Number(a), LoxValue::Number(b)) => self.push(&LoxValue::Number(a - b)),
+            _ => panic!("Operands must be numbers"),
+        }
+    }
+
+    fn op_multiply(&mut self) {
+        let b = self.pop();
+        let a = self.pop();
+        match (a, b) {
+            (LoxValue::Number(a), LoxValue::Number(b)) => self.push(&LoxValue::Number(a * b)),
+            _ => panic!("Operands must be numbers"),
+        }
+    }
+
+    fn op_divide(&mut self) {
+        let b = self.pop();
+        let a = self.pop();
+        match (a, b) {
+            (LoxValue::Number(a), LoxValue::Number(b)) => self.push(&LoxValue::Number(a / b)),
+            _ => panic!("Operands must be numbers"),
+        }
     }
 
     fn op_negate(&mut self) {
