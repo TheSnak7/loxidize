@@ -1,6 +1,9 @@
 pub mod bytecode;
+pub mod compiler;
 pub mod lox_value;
 pub mod opcodes;
+pub mod repl;
 pub mod stack;
 pub mod states;
+pub mod token;
 pub mod vm;

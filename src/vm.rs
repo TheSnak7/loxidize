@@ -1,11 +1,9 @@
-use std::pin::Pin;
-
 use crate::{
     bytecode::{Bytecode, Ip},
+    compiler::Compiler,
     lox_value::LoxValue,
     opcodes::Op,
     stack::{Sp, Stack},
-    states::{Initialized, State, Uninitialized},
 };
 
 #[derive(Debug)]
@@ -17,29 +15,33 @@ pub enum Error {
 pub const STACK_SIZE: usize = 10;
 
 #[derive(Debug)]
-pub struct VM<S: State> {
-    ip: Ip<S>,
-    sp: Sp<S, STACK_SIZE>,
+pub struct VM {
+    ip: Option<Ip>,
+    sp: Option<Sp<STACK_SIZE>>,
     // FIXME: Make more rusty
     bytecode: Option<Bytecode>,
     stack: Stack<STACK_SIZE>,
 }
 
-impl VM<Initialized> {
-    // Change structure later
-    // Signature hack for now
-    // Correct:     pub fn interpret(&mut self, bytecode: Bytecode) -> Result<(), Error> {
-    pub fn interpret(&mut self) -> Result<(), Error> {
-        self.ip = self.bytecode.as_ref().unwrap().get_base_ip();
-        //self.bytecode = Some(bytecode);
+impl VM {
+    pub fn interpret(&mut self, code: &str) -> Result<(), Error> {
+        let compiler = Compiler::default();
+        let bytecode = compiler.compile(code);
+
+        self.bytecode = Some(bytecode);
+
+        self.ip = Some(self.bytecode.as_ref().unwrap().get_base_ip().unwrap());
 
         loop {
-            let inst = self.ip.get_op();
-            self.ip.inc(1);
+            let inst = self.ip.as_mut().unwrap().get_op();
+            self.ip.as_mut().unwrap().inc(1);
 
             if cfg!(feature = "vm-trace-execution") {
                 println!("          ");
-                for slot in self.stack.get_stack_iterator(self.sp.clone()) {
+                for slot in self
+                    .stack
+                    .get_stack_iterator(self.sp.as_mut().unwrap().clone())
+                {
                     print!("[ {slot} ]");
                 }
                 println!();
@@ -63,8 +65,8 @@ impl VM<Initialized> {
     }
 
     fn read_u8(&mut self) -> u8 {
-        let byte = self.ip.get_u8();
-        self.ip.inc(1);
+        let byte = self.ip.as_ref().unwrap().get_u8();
+        self.ip.as_mut().unwrap().inc(1);
         byte
     }
 
@@ -74,13 +76,13 @@ impl VM<Initialized> {
     }
 
     fn push(&mut self, value: &LoxValue) {
-        self.sp.write_value(value);
-        self.sp.inc(1);
+        self.sp.as_mut().unwrap().write_value(value);
+        self.sp.as_mut().unwrap().inc(1);
     }
 
     fn pop(&mut self) -> LoxValue {
-        self.sp.dec(1);
-        let val = self.sp.get_value();
+        self.sp.as_mut().unwrap().dec(1);
+        let val = self.sp.as_mut().unwrap().get_value();
         val
     }
 
@@ -133,23 +135,11 @@ impl VM<Initialized> {
     }
 }
 
-impl VM<Uninitialized> {
-    // Hack for now
-    pub fn init(mut self, bytecode: Bytecode) -> VM<Initialized> {
-        VM {
-            ip: bytecode.get_base_ip(),
-            sp: self.stack.get_base_sp(),
-            bytecode: Some(bytecode),
-            stack: self.stack,
-        }
-    }
-}
-
-impl Default for VM<Uninitialized> {
+impl Default for VM {
     fn default() -> Self {
         Self {
-            ip: Ip::<Uninitialized>::create_uninitialized(),
-            sp: Sp::<Uninitialized, STACK_SIZE>::create_uninitialized(),
+            ip: None,
+            sp: None,
             bytecode: None,
             stack: Stack::new(),
         }

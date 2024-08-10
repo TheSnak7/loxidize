@@ -1,48 +1,31 @@
-use std::{cmp, pin::Pin};
+use std::{cmp, pin::Pin, ptr::NonNull};
 
-use crate::{
-    lox_value::LoxValue,
-    states::{Initialized, State, Uninitialized},
-};
+use crate::lox_value::LoxValue;
 
 #[derive(Debug)]
-pub struct Sp<S: State, const StackSize: usize> {
-    ptr: *mut LoxValue,
-    state: S,
+pub struct Sp<const StackSize: usize> {
+    ptr: NonNull<LoxValue>,
 }
 
-impl<S: State, const StackSize: usize> Sp<S, StackSize> {
-    pub unsafe fn create(stack: &mut Stack<StackSize>) -> Sp<Initialized, StackSize> {
+impl<const StackSize: usize> Sp<StackSize> {
+    pub unsafe fn create(stack: &mut Stack<StackSize>) -> Sp<StackSize> {
         let ptr = stack.bytes.as_mut_ptr();
         assert!(ptr != std::ptr::null_mut());
         Sp {
-            ptr: ptr,
-            state: Initialized,
-        }
-    }
-
-    pub fn create_uninitialized() -> Sp<Uninitialized, StackSize> {
-        Sp {
-            ptr: std::ptr::null_mut(),
-            state: Uninitialized,
+            ptr: NonNull::new(ptr).unwrap(),
         }
     }
 }
 
-impl<const StackSize: usize> Sp<Initialized, StackSize> {
+impl<const StackSize: usize> Sp<StackSize> {
     #[inline(always)]
     pub fn get_value(&self) -> LoxValue {
-        unsafe { *self.ptr }
+        unsafe { *self.ptr.as_ref() }
     }
 
     #[inline(always)]
     pub fn write_value(&mut self, value: &LoxValue) {
-        unsafe { *self.ptr = *value };
-    }
-
-    #[inline(always)]
-    pub fn read_value(&self) -> LoxValue {
-        unsafe { *self.ptr }
+        unsafe { *self.ptr.as_mut() = value.clone() };
     }
 
     #[inline(always)]
@@ -56,24 +39,21 @@ impl<const StackSize: usize> Sp<Initialized, StackSize> {
     }
 }
 
-impl<const StackSize: usize> PartialEq for Sp<Initialized, StackSize> {
+impl<const StackSize: usize> PartialEq for Sp<StackSize> {
     fn eq(&self, other: &Self) -> bool {
         return self.ptr == other.ptr;
     }
 }
 
-impl<const StackSize: usize> PartialOrd for Sp<Initialized, StackSize> {
+impl<const StackSize: usize> PartialOrd for Sp<StackSize> {
     fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
         self.ptr.partial_cmp(&other.ptr)
     }
 }
 
-impl<const StackSize: usize> Clone for Sp<Initialized, StackSize> {
+impl<const StackSize: usize> Clone for Sp<StackSize> {
     fn clone(&self) -> Self {
-        Self {
-            ptr: self.ptr,
-            state: Initialized,
-        }
+        Self { ptr: self.ptr }
     }
 }
 
@@ -91,25 +71,22 @@ impl<const StackSize: usize> Stack<StackSize> {
         }
     }
 
-    pub fn get_base_sp(&mut self) -> Sp<Initialized, StackSize> {
-        unsafe { Sp::<Initialized, StackSize>::create(self) }
+    pub fn get_base_sp(&mut self) -> Sp<StackSize> {
+        unsafe { Sp::<StackSize>::create(self) }
     }
 
-    pub fn get_stack_iterator(
-        &mut self,
-        up_to: Sp<Initialized, StackSize>,
-    ) -> StackIterator<StackSize> {
+    pub fn get_stack_iterator(&mut self, up_to: Sp<StackSize>) -> StackIterator<StackSize> {
         StackIterator::new(self, &up_to)
     }
 }
 
 pub struct StackIterator<const StackSize: usize> {
-    curr: Sp<Initialized, StackSize>,
-    top: Sp<Initialized, StackSize>,
+    curr: Sp<StackSize>,
+    top: Sp<StackSize>,
 }
 
 impl<const StackSize: usize> StackIterator<StackSize> {
-    pub fn new(stack: &mut Stack<StackSize>, sp: &Sp<Initialized, StackSize>) -> Self {
+    pub fn new(stack: &mut Stack<StackSize>, sp: &Sp<StackSize>) -> Self {
         let base = stack.get_base_sp();
         let top = sp.clone();
 

@@ -1,49 +1,36 @@
-use std::pin::Pin;
+use std::{pin::Pin, ptr::NonNull};
 
 use num_enum::TryFromPrimitive;
 
-use crate::{
-    lox_value::LoxValue,
-    opcodes::Op,
-    states::{Initialized, Uninitialized},
-};
+use crate::{lox_value::LoxValue, opcodes::Op};
 
 #[derive(Debug)]
-pub struct Ip<S> {
-    ptr: *const u8,
-    state: S,
+pub struct Ip {
+    ptr: NonNull<u8>,
 }
 
-impl<S> Ip<S> {
-    pub unsafe fn create(code: Pin<&[u8]>) -> Ip<Initialized> {
+impl Ip {
+    pub unsafe fn create(code: Pin<&[u8]>) -> Ip {
         let ptr = code.as_ptr();
         assert!(ptr != std::ptr::null());
 
         Ip {
-            ptr: ptr,
-            state: Initialized,
-        }
-    }
-
-    pub fn create_uninitialized() -> Ip<Uninitialized> {
-        Ip {
-            ptr: std::ptr::null(),
-            state: Uninitialized,
+            ptr: NonNull::new(ptr as *mut u8).unwrap(),
         }
     }
 }
 
-impl Ip<Initialized> {
+impl Ip {
     #[inline(always)]
     pub fn get_op(&self) -> Op {
-        let byte = unsafe { *self.ptr };
+        let byte = unsafe { *self.ptr.as_ptr() };
         let op = Op::try_from_primitive(byte).unwrap();
         op
     }
 
     #[inline(always)]
     pub fn get_u8(&self) -> u8 {
-        let byte = unsafe { *self.ptr };
+        let byte = unsafe { *self.ptr.as_ptr() };
         byte
     }
 
@@ -58,6 +45,7 @@ pub struct Bytecode {
     code: Vec<u8>,
     constants: Vec<LoxValue>,
     lines: Vec<i32>,
+    finished_compilation: bool,
 }
 
 impl Bytecode {
@@ -66,6 +54,7 @@ impl Bytecode {
             code: vec![],
             constants: vec![],
             lines: vec![],
+            finished_compilation: false,
         }
     }
 
@@ -74,8 +63,12 @@ impl Bytecode {
     With a secure memory location this pointer is safe, as the interpreter is single-threaded
     Furthermore the vector can be considered immutable, the pointer is required only for pointer arithmetic
     */
-    pub fn get_base_ip(&self) -> Ip<Initialized> {
-        unsafe { Ip::<Initialized>::create(Pin::new(self.code.as_slice())) }
+    pub fn get_base_ip(&self) -> Option<Ip> {
+        if !self.finished_compilation {
+            return None;
+        } else {
+            return unsafe { Some(Ip::create(Pin::new(self.code.as_slice()))) };
+        }
     }
 
     pub fn get_code_len(&self) -> usize {
