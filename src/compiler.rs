@@ -12,7 +12,7 @@ impl Compiler {
 
         let mut lex = Token::lexer("1\n");
         let mut parser = Parser::new(code, &mut lex);
-        let ast = parser.parse_num_literal();
+        let ast = parser.parse_root();
 
         println!("{:?}", ast);
 

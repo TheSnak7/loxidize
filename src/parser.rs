@@ -80,41 +80,18 @@ impl<'a> Parser<'a> {
     }
 
     pub fn parse_root(&mut self) -> Result<Ast, ()> {
-        let lhs = Box::new(self.parse_num_literal());
-        let op = self.lexer.next();
-        let op_node = if let Some(op) = op {
-            if let Ok(op) = op {
-                match op {
-                    Token::Plus => AssocOp::from_token(&op).unwrap().to_ast_binop(),
-                    _ => {
-                        self.error("Expected operator");
-                        return Err(());
-                    }
-                }
-            } else {
-                self.error("Lex error");
-                return Err(());
-            }
-        } else {
-            self.error("Expected operator");
-            return Err(());
-        };
-        let rhs = Box::new(self.parse_num_literal());
-        let kind = ExprKind::Binary(op_node, lhs, rhs);
-        let expr = Expr { kind };
-        Ok(Ast { root: expr })
-    }
-
-    fn parse_root_2(&mut self) -> Result<Ast, ()> {
+        // Set up initial state
         self.advance();
         let expr = self.parse_num_literal();
         let ast = Ast { root: expr };
         Ok(ast)
     }
 
+    fn parse_binop() -> Expr {
+        unimplemented!("No binary operations for now")
+    }
+
     pub fn parse_num_literal(&mut self) -> Expr {
-        //Hack for now
-        self.advance();
         let num = match &self.token {
             Token::Number(num) => num.clone(),
             _ => panic!(
