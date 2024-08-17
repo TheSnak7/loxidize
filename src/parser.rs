@@ -1,5 +1,5 @@
 use crate::{
-    ast::{AssocOp, Ast, Expr, ExprKind, Lit},
+    ast::{AssocOp, Ast, BinOpKind, Expr, ExprKind, Lit},
     token::Token,
 };
 
@@ -82,17 +82,27 @@ impl<'a> Parser<'a> {
     pub fn parse_root(&mut self) -> Result<Ast, ()> {
         // Set up initial state
         self.advance();
-        let expr = self.parse_num_literal();
+        self.advance();
+        let expr = self.parse_binop();
         let ast = Ast { root: expr };
         Ok(ast)
     }
 
-    fn parse_binop() -> Expr {
-        unimplemented!("No binary operations for now")
+    fn parse_binop(&mut self) -> Expr {
+        let lhs = Box::new(self.parse_num_literal());
+        let op = match self.prev_token {
+            Token::Plus => BinOpKind::Add,
+            other => unimplemented!("Unimplemented Binops: {}", format!("{:?}", other)),
+        };
+        self.advance();
+        let rhs = Box::new(self.parse_num_literal());
+        Expr {
+            kind: ExprKind::Binary(op, lhs, rhs),
+        }
     }
 
     pub fn parse_num_literal(&mut self) -> Expr {
-        let num = match &self.token {
+        let num = match &self.prev_token {
             Token::Number(num) => num.clone(),
             _ => panic!(
                 "Unexpected token instead of number: {}",
@@ -101,6 +111,7 @@ impl<'a> Parser<'a> {
         };
         self.advance();
         let literal = Lit::from(num);
+        println!("Parsed: {:?}", literal);
         let kind = ExprKind::Lit(literal);
         let expr = Expr { kind: kind };
         expr

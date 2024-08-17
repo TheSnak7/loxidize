@@ -10,7 +10,7 @@ impl Compiler {
 
         println!("Received: '{}'", code);
 
-        let mut lex = Token::lexer("1\n");
+        let mut lex = Token::lexer("1 + 3\n");
         let mut parser = Parser::new(code, &mut lex);
         let ast = parser.parse_root();
 
