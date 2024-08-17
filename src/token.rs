@@ -1,6 +1,18 @@
-use std::{num::ParseFloatError, process::id};
+use std::{num::ParseFloatError, string};
 
-use logos::Logos;
+use logos::{Logos, Skip};
+
+#[derive(Debug, Clone, PartialEq, Copy)]
+pub struct TokenSpan {
+    pub start: u32,
+    pub end: u32,
+}
+
+impl TokenSpan {
+    pub fn string<'a>(&self, source: &'a str) -> &'a str {
+        &source[self.start as usize..self.end as usize]
+    }
+}
 
 #[derive(Default, Debug, Clone, PartialEq)]
 pub enum LexingError {
@@ -14,9 +26,10 @@ impl From<ParseFloatError> for LexingError {
     }
 }
 
-#[derive(Logos, Debug, PartialEq)]
+#[derive(Logos, Debug, PartialEq, Clone, Copy)]
 #[logos(error = LexingError)]
-#[logos(skip r"[ \t\n\f]+")] // Ignore this regex pattern between tokens
+#[logos(extras = (usize, usize))]
+#[logos(skip r"[ \t\f]+")] // Ignore this regex pattern between tokens
 pub enum Token {
     // Single character tokens
     #[token("+")]
@@ -63,9 +76,9 @@ pub enum Token {
 
     // Literals
     #[regex("[a-zA-Z_][a-zA-Z0-9_]*", identifier)]
-    Identifier(String),
+    Identifier(TokenSpan),
     #[regex(r#""[^"]*""#, string)]
-    String(String),
+    String(TokenSpan),
     #[regex(r"\d+(\.\d+)?", number)]
     Number(f64),
 
@@ -98,16 +111,36 @@ pub enum Token {
     Var,
     #[token("while")]
     While,
+
+    //For error reporting
+    #[regex(r"\n", newline)]
+    Newline,
+
+    EOF,
 }
 
-fn identifier(lex: &mut logos::Lexer<Token>) -> String {
-    lex.slice().to_string()
+fn identifier(lex: &mut logos::Lexer<Token>) -> (TokenSpan) {
+    // Length of source code is guaranteed to be less than u32::MAX
+    TokenSpan {
+        start: lex.span().start as u32,
+        end: lex.span().end as u32,
+    }
 }
 
-fn string(lex: &mut logos::Lexer<Token>) -> String {
-    lex.slice()[1..lex.slice().len() - 1].to_string()
+fn string(lex: &mut logos::Lexer<Token>) -> (TokenSpan) {
+    // Length of source code is guaranteed to be less than u32::MAX
+    TokenSpan {
+        start: lex.span().start as u32,
+        end: lex.span().end as u32,
+    }
 }
 
 fn number(lex: &mut logos::Lexer<Token>) -> Result<f64, LexingError> {
     lex.slice().parse().map_err(|_| LexingError::InvalidNumber)
+}
+
+fn newline(lex: &mut logos::Lexer<Token>) -> Skip {
+    lex.extras.0 += 1;
+    lex.extras.1 = lex.span().end;
+    Skip
 }

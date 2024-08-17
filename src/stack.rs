@@ -3,6 +3,7 @@ use std::{cmp, pin::Pin, ptr::NonNull};
 use crate::lox_value::LoxValue;
 
 #[derive(Debug)]
+#[repr(transparent)]
 pub struct Sp<const StackSize: usize> {
     ptr: NonNull<LoxValue>,
 }

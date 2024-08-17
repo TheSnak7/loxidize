@@ -1,6 +1,6 @@
 use logos::Logos;
 
-use crate::{bytecode::Bytecode, token::Token};
+use crate::{ast::Ast, bytecode::Bytecode, parser::Parser, token::Token};
 
 pub struct Compiler {}
 
@@ -10,23 +10,11 @@ impl Compiler {
 
         println!("Received: '{}'", code);
 
-        let mut lex = Token::lexer("1 + 1\n");
+        let mut lex = Token::lexer("1\n");
+        let mut parser = Parser::new(code, &mut lex);
+        let ast = parser.parse_num_literal();
 
-        assert_eq!(lex.next(), Some(Ok(Token::Number(1.0))));
-        assert_eq!(lex.span(), 0..1);
-        assert_eq!(lex.slice(), "1");
-
-        assert_eq!(lex.next(), Some(Ok(Token::Plus)));
-        assert_eq!(lex.span(), 2..3);
-        assert_eq!(lex.slice(), "+");
-
-        assert_eq!(lex.next(), Some(Ok(Token::Number(1.0))));
-        assert_eq!(lex.span(), 4..5);
-        assert_eq!(lex.slice(), "1");
-
-        assert_eq!(lex.next(), None);
-
-        println!("Finished lexing");
+        println!("{:?}", ast);
 
         Bytecode::default()
     }

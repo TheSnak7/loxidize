@@ -5,6 +5,7 @@ use num_enum::TryFromPrimitive;
 use crate::{lox_value::LoxValue, opcodes::Op};
 
 #[derive(Debug)]
+#[repr(transparent)]
 pub struct Ip {
     ptr: NonNull<u8>,
 }
