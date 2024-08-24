@@ -30,7 +30,10 @@ impl VM {
 
         self.bytecode = Some(bytecode);
 
-        self.ip = Some(self.bytecode.as_ref().unwrap().get_base_ip().unwrap());
+        let bc = self.bytecode.as_ref().unwrap();
+        self.ip = Some(bc.get_base_ip().unwrap());
+
+        self.sp = Some(self.stack.get_base_sp());
 
         loop {
             let inst = self.ip.as_mut().unwrap().get_op();

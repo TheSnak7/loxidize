@@ -46,7 +46,7 @@ pub struct Bytecode {
     code: Vec<u8>,
     constants: Vec<LoxValue>,
     lines: Vec<i32>,
-    finished_compilation: bool,
+    pub finished_compilation: bool,
 }
 
 impl Bytecode {

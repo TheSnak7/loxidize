@@ -1,6 +1,8 @@
 use logos::Logos;
 
-use crate::{ast::Ast, bytecode::Bytecode, parser::Parser, token::Token};
+use crate::{
+    ast::Ast, bytecode::Bytecode, bytecode_compiler::BytecodeCompiler, parser::Parser, token::Token,
+};
 
 pub struct Compiler {}
 
@@ -10,13 +12,16 @@ impl Compiler {
 
         println!("Received: '{}'", code);
 
-        let mut lex = Token::lexer("1 + 3\n");
+        let mut lex = Token::lexer(code);
         let mut parser = Parser::new(code, &mut lex);
-        let ast = parser.parse_root();
-
+        let ast = parser.parse_root().unwrap();
         println!("{:?}", ast);
+        let bytecode_compiler = BytecodeCompiler::new(&ast);
+        let bytecode = bytecode_compiler.compile();
 
-        Bytecode::default()
+        println!("{}", bytecode.disassemble("test"));
+
+        bytecode
     }
 }
 
