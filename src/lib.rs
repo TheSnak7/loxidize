@@ -7,4 +7,5 @@ pub mod parser;
 pub mod repl;
 pub mod stack;
 pub mod token;
+pub mod visit;
 pub mod vm;
