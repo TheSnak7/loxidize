@@ -4,16 +4,15 @@ use crate::{
     ast::{Ast, BinOpKind, ExprKind},
     bytecode::Bytecode,
     opcodes::Op,
-    visit::{Visitor, VisitorResult},
 };
 
-pub struct BytecodeCompiler<'a> {
-    ast: &'a Ast,
+pub struct BytecodeCompiler<'ast> {
+    ast: &'ast Ast,
     bytecode_block: Bytecode,
 }
 
-impl<'a> BytecodeCompiler<'a> {
-    pub fn new(ast: &'a Ast) -> Self {
+impl<'ast> BytecodeCompiler<'ast> {
+    pub fn new(ast: &'ast Ast) -> Self {
         Self {
             ast: ast,
             bytecode_block: Bytecode::default(),
@@ -27,20 +26,8 @@ impl<'a> BytecodeCompiler<'a> {
         self.bytecode_block.finished_compilation = true;
         return self.bytecode_block;
     }
-}
 
-impl VisitorResult for () {
-    fn output() -> Self {
-        // For now
-        ()
-    }
-}
-
-// FIXME: Rethink architecture, visitor may be unnecessary, major code duplication
-impl<'ast> Visitor<'ast> for BytecodeCompiler<'ast> {
-    type Result = ();
-
-    fn visit_expr(&mut self, expr: &'ast crate::ast::Expr) -> Self::Result {
+    fn visit_expr(&mut self, expr: &'ast crate::ast::Expr) -> () {
         match &expr.kind {
             ExprKind::Binary(op, lhs, rhs) => {
                 self.visit_expr(lhs);
