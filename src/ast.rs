@@ -44,18 +44,6 @@ impl Expr {
     }*/
 }
 
-pub enum ExprPrecedence {
-    Binary(BinOpKind),
-}
-
-impl ExprPrecedence {
-    pub fn order(self) -> i8 {
-        match self {
-            ExprPrecedence::Binary(op) => AssocOp::from_ast_binop(op).precedence() as i8,
-        }
-    }
-}
-
 pub enum AssocOp {
     Add,
 }

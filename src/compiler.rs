@@ -1,7 +1,7 @@
 use logos::Logos;
 
 use crate::{
-    ast::Ast, bytecode::Bytecode, bytecode_compiler::BytecodeCompiler, parser::Parser, token::Token,
+    bytecode::Bytecode, bytecode_compiler::BytecodeCompiler, parser::Parser, token::Token,
 };
 
 pub struct Compiler {}
@@ -11,6 +11,10 @@ impl Compiler {
         println!("Started compiling");
 
         println!("Received: '{}'", code);
+
+        if code.contains("\n") {
+            println!("Contained whitespace");
+        }
 
         let mut lex = Token::lexer(code);
         let mut parser = Parser::new(code, &mut lex);

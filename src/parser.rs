@@ -79,6 +79,10 @@ impl<'a> Parser<'a> {
         self.had_error = true;
     }
 
+    pub fn get_parse_rule(token: &Token) -> Box<dyn Fn() -> ()> {
+        unimplemented!()
+    }
+
     pub fn parse_root(&mut self) -> Result<Ast, ()> {
         // Set up initial state
         self.advance();
@@ -90,6 +94,7 @@ impl<'a> Parser<'a> {
 
     fn parse_binop(&mut self) -> Expr {
         let lhs = Box::new(self.parse_num_literal());
+        let assoc_op = AssocOp::from_token(&self.prev_token);
         let op = match self.prev_token {
             Token::Plus => BinOpKind::Add,
             other => unimplemented!("Unimplemented Binops: {}", format!("{:?}", other)),
