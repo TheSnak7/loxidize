@@ -14,6 +14,9 @@ pub fn repl() {
             .read_line(&mut line)
             .expect("Failed to read line");
 
+        // Fix for '\n' in command line
+        let line = line.trim();
+
         vm.interpret(&line);
     }
 }

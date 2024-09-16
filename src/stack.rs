@@ -107,6 +107,6 @@ impl<const StackSize: usize> Iterator for StackIterator<StackSize> {
             self.curr.inc(1);
             return Some(value);
         }
-        return None;
+        None
     }
 }

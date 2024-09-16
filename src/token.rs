@@ -17,6 +17,7 @@ impl TokenSpan {
 #[derive(Default, Debug, Clone, PartialEq)]
 pub enum LexingError {
     #[default]
+    Unspecified,
     InvalidNumber,
 }
 
@@ -119,7 +120,7 @@ pub enum Token {
     EOF,
 }
 
-fn identifier(lex: &mut logos::Lexer<Token>) -> (TokenSpan) {
+fn identifier(lex: &mut logos::Lexer<Token>) -> TokenSpan {
     // Length of source code is guaranteed to be less than u32::MAX
     TokenSpan {
         start: lex.span().start as u32,
@@ -127,7 +128,8 @@ fn identifier(lex: &mut logos::Lexer<Token>) -> (TokenSpan) {
     }
 }
 
-fn string(lex: &mut logos::Lexer<Token>) -> (TokenSpan) {
+#[allow(clippy::cast_possible_truncation)]
+fn string(lex: &mut logos::Lexer<Token>) -> TokenSpan {
     // Length of source code is guaranteed to be less than u32::MAX
     TokenSpan {
         start: lex.span().start as u32,

@@ -10,14 +10,8 @@ impl Compiler {
     pub fn compile(&self, code: &str) -> Bytecode {
         println!("Started compiling");
 
-        println!("Received: '{}'", code);
-
-        if code.contains("\n") {
-            println!("Contained whitespace");
-        }
-
         let mut lex = Token::lexer(code);
-        let mut parser = Parser::new(code, &mut lex);
+        let mut parser = Parser::new(&mut lex);
         let ast = parser.parse_root().unwrap();
         println!("{:?}", ast);
         let bytecode_compiler = BytecodeCompiler::new(&ast);

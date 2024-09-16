@@ -13,29 +13,27 @@ pub struct Ip {
 impl Ip {
     pub unsafe fn create(code: Pin<&[u8]>) -> Ip {
         let ptr = code.as_ptr();
-        assert!(ptr != std::ptr::null());
+        assert!(!ptr.is_null());
 
         Ip {
-            ptr: NonNull::new(ptr as *mut u8).unwrap(),
+            ptr: NonNull::new(ptr.cast_mut()).unwrap(),
         }
     }
 }
 
 impl Ip {
-    #[inline(always)]
+    #[inline]
     pub fn get_op(&self) -> Op {
         let byte = unsafe { *self.ptr.as_ptr() };
-        let op = Op::try_from_primitive(byte).unwrap();
-        op
+        Op::try_from_primitive(byte).unwrap()
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn get_u8(&self) -> u8 {
-        let byte = unsafe { *self.ptr.as_ptr() };
-        byte
+        unsafe { *self.ptr.as_ptr() }
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn inc(&mut self, offset: usize) {
         unsafe { self.ptr = self.ptr.add(offset) };
     }
@@ -65,15 +63,15 @@ impl Bytecode {
     Furthermore the vector can be considered immutable, the pointer is required only for pointer arithmetic
     */
     pub fn get_base_ip(&self) -> Option<Ip> {
-        if !self.finished_compilation {
-            return None;
-        } else {
+        if self.finished_compilation {
             return unsafe { Some(Ip::create(Pin::new(self.code.as_slice()))) };
+        } else {
+            None
         }
     }
 
     pub fn get_code_len(&self) -> usize {
-        return self.code.len();
+        self.code.len()
     }
 
     pub fn write_u8(&mut self, byte: u8, line: i32) {

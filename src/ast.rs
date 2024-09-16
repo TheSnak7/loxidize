@@ -35,42 +35,23 @@ pub struct Expr {
     pub kind: ExprKind,
 }
 
-impl Expr {
-    /*pub fn precedence(&self) -> ExprPrecedence {
-        match &self.kind {
-            ExprKind::Binary(op, ..) => ExprPrecedence::Binary(op),
-            _ => unimplemented!("More operators to come"),
-        }
-    }*/
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub enum Precedence {
+    None,
+    Summation,
+    Multiplication,
+    Division,
 }
 
-pub enum AssocOp {
-    Add,
-}
-
-impl AssocOp {
-    pub fn from_token(token: &Token) -> Option<AssocOp> {
+impl Precedence {
+    #[must_use]
+    pub fn from_token(token: &Token) -> Precedence {
         match token {
-            Token::Plus => Some(AssocOp::Add),
-            _ => unimplemented!("More operators to come"),
-        }
-    }
-
-    pub fn from_ast_binop(op: BinOpKind) -> Self {
-        match op {
-            BinOpKind::Add => AssocOp::Add,
-        }
-    }
-
-    pub fn to_ast_binop(&self) -> BinOpKind {
-        match *self {
-            AssocOp::Add => BinOpKind::Add,
-        }
-    }
-
-    pub fn precedence(&self) -> usize {
-        match *self {
-            AssocOp::Add => 8,
+            Token::EOF => Precedence::None,
+            Token::Plus | Token::Minus => Precedence::Summation,
+            Token::Star => Precedence::Multiplication,
+            Token::Slash => Precedence::Division,
+            default => unimplemented!("Illegal Token {:?}", default),
         }
     }
 }
@@ -87,6 +68,7 @@ pub enum ExprKind {
 
 pub enum BinOpKind {
     Add,
+    Sub,
 }
 
 #[derive(Debug)]
