@@ -1,4 +1,4 @@
-use std::{num::ParseFloatError, string};
+use std::num::ParseFloatError;
 
 use logos::{Logos, Skip};
 

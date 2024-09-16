@@ -1,5 +1,3 @@
-use std::fmt::Binary;
-
 use crate::{
     ast::{Ast, BinOpKind, ExprKind},
     bytecode::Bytecode,
