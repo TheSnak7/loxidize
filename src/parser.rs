@@ -90,8 +90,10 @@ impl<'a> Parser<'a> {
     fn parse_expression(&mut self, precedence: Precedence) -> Expr {
         let mut left = self.parse_prefix();
 
-        while precedence < Precedence::from_token(&self.prev_token) {
-            left = self.parse_infix(left);
+        let token_precedence = Precedence::from_token(&self.prev_token);
+
+        while precedence < token_precedence {
+            left = self.parse_infix(left, token_precedence);
         }
         return left;
     }
@@ -103,26 +105,27 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse_infix(&mut self, left: Expr) -> Expr {
+    fn parse_infix(&mut self, left: Expr, precedence: Precedence) -> Expr {
         match self.prev_token {
-            Token::Plus | Token::Minus => {
-                //self.advance();
-                self.parse_binop(left)
+            Token::Plus | Token::Minus | Token::Star | Token::Slash => {
+                self.parse_binop(left, precedence)
             }
-            _ => unimplemented!(),
+            _ => unimplemented!("Unimplemented infix for: {:?}", self.prev_token),
         }
     }
 
-    fn parse_binop(&mut self, left: Expr) -> Expr {
-        println!("Current operator token is: {:?}", self.prev_token);
+    fn parse_binop(&mut self, left: Expr, precedence: Precedence) -> Expr {
         let lhs = Box::new(left);
         let op = match self.prev_token {
             Token::Plus => BinOpKind::Add,
+            Token::Minus => BinOpKind::Sub,
+            Token::Star => BinOpKind::Mul,
+            Token::Slash => BinOpKind::Div,
             other => unimplemented!("Unimplemented Binops: {}", format!("{:?}", other)),
         };
 
         self.advance();
-        let rhs = Box::new(self.parse_num_literal());
+        let rhs = Box::new(self.parse_expression(precedence));
         let expr = Expr {
             kind: ExprKind::Binary(op, lhs, rhs),
         };

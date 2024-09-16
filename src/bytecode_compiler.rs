@@ -38,6 +38,12 @@ impl<'ast> BytecodeCompiler<'ast> {
                     BinOpKind::Sub => {
                         self.bytecode_block.write_u8(Op::Subtract.into(), 111);
                     }
+                    BinOpKind::Mul => {
+                        self.bytecode_block.write_u8(Op::Multiply.into(), 111);
+                    }
+                    BinOpKind::Div => {
+                        self.bytecode_block.write_u8(Op::Divide.into(), 111);
+                    }
                 }
             }
             ExprKind::Lit(lit) => {

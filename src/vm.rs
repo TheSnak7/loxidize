@@ -6,7 +6,7 @@ use crate::{
     stack::{Sp, Stack},
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum Error {
     Compile,
     Runtime,

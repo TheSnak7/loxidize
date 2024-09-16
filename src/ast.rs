@@ -8,7 +8,7 @@ use std::fmt::Debug;
 
 use crate::token::Token;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 
 pub struct Lit {
     pub kind: LitKind,
@@ -16,7 +16,7 @@ pub struct Lit {
     pub symbol: f64,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum LitKind {
     Number,
 }
@@ -30,7 +30,7 @@ impl From<f64> for Lit {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Expr {
     pub kind: ExprKind,
 }
@@ -58,17 +58,19 @@ impl Precedence {
 
 pub type BinOp = BinOpKind;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ExprKind {
     Binary(BinOp, Box<Expr>, Box<Expr>),
     Lit(Lit),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 
 pub enum BinOpKind {
     Add,
     Sub,
+    Mul,
+    Div,
 }
 
 #[derive(Debug)]

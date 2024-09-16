@@ -17,6 +17,9 @@ pub fn repl() {
         // Fix for '\n' in command line
         let line = line.trim();
 
-        vm.interpret(&line);
+        let res = vm.interpret(&line);
+        if let Err(e) = res {
+            eprintln!("VM Error: {:?}", e);
+        }
     }
 }
